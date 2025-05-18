@@ -1,0 +1,17 @@
+/target
+.env
+.DS_Store
+desktop.ini
+
+
+## Tags
+tags
+tags.*
+TAGS
+TAGS.*
+
+## Temporary files
+*~
+\#*
+\#*\#
+.#*

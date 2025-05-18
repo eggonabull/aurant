@@ -1,0 +1,80 @@
+name: Deploy to AWS ECS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # Frontend deployment
+      - name: Build, tag, and push Frontend Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: aurant-dev-frontend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd frontend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Fill in the new image ID in the Frontend ECS task definition
+        id: frontend-taskdef
+        uses: aws-actions/amazon-ecs-render-task-definition@v2
+        with:
+          task-definition: frontend/frontend/docker/task-definition.json
+          container-name: frontend
+          image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-frontend:${{ github.sha }}
+
+      - name: Deploy Frontend to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          service: frontend-service
+          cluster: aurant
+          task-definition: ${{ steps.frontend-taskdef.outputs.task-definition }}
+          wait-for-service-stability: true
+
+      # Backend deployment
+      - name: Build, tag, and push Backend Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: aurant-dev-backend
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd backend
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Fill in the new image ID in the Backend ECS task definition
+        id: backend-taskdef
+        uses: aws-actions/amazon-ecs-render-task-definition@v2
+        with:
+          task-definition: backend/backend/docker/task-definition.json
+          container-name: backend
+          image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
+
+      - name: Deploy Backend to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          service: backend-service
+          cluster: aurant
+          task-definition: ${{ steps.backend-taskdef.outputs.task-definition }}
+          wait-for-service-stability: true

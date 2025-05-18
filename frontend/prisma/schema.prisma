@@ -1,0 +1,125 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  user_id    String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  first_name String?
+  last_name  String?
+  role       String   @default("user")
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  last_login DateTime?
+  is_active  Boolean  @default(true)
+  restaurant Restaurant?
+
+  @@map("users")
+}
+
+model Restaurant {
+  restaurant_id String   @id @default(uuid())
+  name          String
+  owner         User     @relation(fields: [owner_id], references: [user_id])
+  owner_id      String   @unique
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  staff         Staff[]
+  menus         Menu[]
+  tables        Table[]
+
+  @@map("restaurants")
+}
+
+model Staff {
+  staff_id     String   @id @default(uuid())
+  restaurant   Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+  restaurant_id String
+  position      String
+  hire_date     DateTime @default(now())
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  email         String   @unique
+  password_hash String
+  first_name    String?
+  last_name     String?
+  last_login    DateTime?
+
+  @@map("staff")
+}
+
+model Menu {
+  menu_id     String   @id @default(uuid())
+  restaurant  Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+  restaurant_id String
+  name        String
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  items       MenuItem[]
+  orders      Order[]
+
+  @@map("menus")
+}
+
+model MenuItem {
+  menu_item_id String   @id @default(uuid())
+  menu         Menu     @relation(fields: [menu_id], references: [menu_id])
+  menu_id      String
+  name         String
+  description  String?
+  price        Decimal  @db.Decimal(10,2)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  orderItems   OrderItem[]
+
+  @@map("menu_items")
+}
+
+model Table {
+  table_id    String   @id @default(uuid())
+  restaurant  Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+  restaurant_id String
+  number      Int
+  capacity    Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  orders      Order[]
+
+  @@map("tables")
+}
+
+model Order {
+  order_id    String   @id @default(uuid())
+  table       Table    @relation(fields: [table_id], references: [table_id])
+  table_id    String
+  status      String
+  total       Decimal  @db.Decimal(10,2)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  items       OrderItem[]
+  menu        Menu     @relation(fields: [menu_id], references: [menu_id])
+  menu_id     String
+
+  @@map("orders")
+}
+
+model OrderItem {
+  order_item_id String   @id @default(uuid())
+  order         Order    @relation(fields: [order_id], references: [order_id])
+  order_id      String
+  menu_item     MenuItem @relation(fields: [menu_item_id], references: [menu_item_id])
+  menu_item_id  String
+  quantity      Int
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("order_items")
+}
