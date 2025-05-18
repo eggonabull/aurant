@@ -2,9 +2,12 @@ FROM node:23.10-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies and TypeScript
 COPY package*.json ./
 RUN npm install
+
+# Copy tsconfig.json first to ensure proper path resolution
+COPY tsconfig.json ./
 
 # Copy source code
 COPY . .
