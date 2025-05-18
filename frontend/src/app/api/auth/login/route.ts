@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
-import { sign } from 'jsonwebtoken';
 import { createSession } from '@/lib/auth-utils';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 export async function POST(request: Request) {
   try {
@@ -44,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = bcrypt.compareSync(password, user.password_hash);
     if (!isValidPassword) {
       return NextResponse.json(
         { message: 'Invalid password' },

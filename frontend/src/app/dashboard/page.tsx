@@ -1,26 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { verifySession, UserSession } from '@/lib/auth';
+import { useSession } from '@/lib/client/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [session, setSession] = useState<UserSession | null>(null);
+  const { session, loading } = useSession();
 
-  useEffect(() => {
-    // Check if user is authenticated
-    verifySession().then((session) => {
-      if (!session) {
-        router.push('/auth/login');
-      } else {
-        setSession(session);
-      }
-    });
-  }, [router]);
+  // Redirect to login if not authenticated
+  if (!loading && !session) {
+    router.push('/auth/login');
+    return null;
+  }
 
-  if (!session) {
-    return <div>Loading...</div>;
+  // Show loading state while fetching session
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return (
@@ -29,16 +28,18 @@ export default function DashboardPage() {
         <div className="px-4 py-6 sm:px-0">
           <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
             <h1 className="text-2xl font-bold text-gray-900">Welcome to Your Dashboard</h1>
-            <div className="mt-6">
-              <p className="text-lg font-semibold mb-2">User Information</p>
-              <div className="space-y-2">
-                <p>Email: {session.email}</p>
-                <p>Role: {session.role}</p>
-                {session.restaurantId && (
-                  <p>Restaurant: {session.restaurantName}</p>
-                )}
+            {session && (
+              <div className="mt-6">
+                <p className="text-lg font-semibold mb-2">User Information</p>
+                <div className="space-y-2">
+                  <p>Email: {session.email}</p>
+                  <p>Role: {session.role}</p>
+                  {session.restaurantId && (
+                    <p>Restaurant: {session.restaurantName}</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
