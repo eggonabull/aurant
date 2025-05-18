@@ -1,18 +1,18 @@
-FROM node:23.10-alpine
+FROM node:24-alpine
 
 WORKDIR /app
+
+RUN npm install --update npm
 
 # Install dependencies and TypeScript
 COPY package*.json ./
 RUN npm install
 
-# Copy tsconfig.json first to ensure proper path resolution
-COPY tsconfig.json ./
-
 # Copy source code
 COPY . .
 
 # Build the application
+RUN npx prisma generate
 RUN npm run build
 
 # Expose the port the app runs on
