@@ -41,10 +41,11 @@ jobs:
           sed -i "s|\${ECR_REGISTRY}|${{ steps.login-ecr.outputs.registry }}|g" aws_setup/task_definitions/frontend.json.template
           sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" aws_setup/task_definitions/frontend.json.template
           
-          # Validate JSON
-          cat aws_setup/task_definitions/frontend.json.template | jq . > /dev/null
+          # Validate JSON and create temporary file
+          cat aws_setup/task_definitions/frontend.json.template | jq . > aws_setup/task_definitions/frontend-task-definition.json
           
-          echo "::set-output name=taskdef_file::aws_setup/task_definitions/frontend.json.template"
+          # Output path to the validated file
+          echo "taskdef_file=aws_setup/task_definitions/frontend-task-definition.json" >> $GITHUB_OUTPUT
 
       # Frontend deployment
       - name: Build, tag, and push Frontend Docker image
@@ -63,6 +64,11 @@ jobs:
         with:
           task-definition: ${{ steps.prepare-taskdef.outputs.taskdef_file }}
           container-name: frontend
+          replacements: |
+            AWS_ACCOUNT_ID: ${{ steps.prepare-taskdef.outputs.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            IMAGE_TAG: ${{ github.sha }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-frontend:${{ github.sha }}
 
       - name: Deploy Frontend to ECS
@@ -98,10 +104,11 @@ jobs:
           sed -i "s|\${ECR_REGISTRY}|$ECR_REGISTRY|g" aws_setup/task_definitions/backend.json.template
           sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws_setup/task_definitions/backend.json.template
           
-          # Validate JSON
-          cat aws_setup/task_definitions/backend.json.template | jq . > /dev/null
+          # Validate JSON and create temporary file
+          cat aws_setup/task_definitions/backend.json.template | jq . > aws_setup/task_definitions/backend-task-definition.json
           
-          echo "::set-output name=taskdef_file::aws_setup/task_definitions/backend.json.template"
+          # Output path to the validated file
+          echo "taskdef_file=aws_setup/task_definitions/backend-task-definition.json" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Backend ECS task definition
         id: backend-taskdef
@@ -109,6 +116,11 @@ jobs:
         with:
           task-definition: ${{ steps.prepare-backend-taskdef.outputs.taskdef_file }}
           container-name: backend
+          replacements: |
+            AWS_ACCOUNT_ID: ${{ steps.prepare-backend-taskdef.outputs.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            IMAGE_TAG: ${{ github.sha }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
 
       - name: Deploy Backend to ECS
