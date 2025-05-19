@@ -33,10 +33,12 @@ jobs:
           AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
           
           # Replace variables in task definition
-          sed -i "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" frontend/frontend/docker/task-definition.json
-          sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" frontend/frontend/docker/task-definition.json
+          sed -i "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" aws_setup/task_definitions/frontend.json.template
+          sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" aws_setup/task_definitions/frontend.json.template
+          sed -i "s|\${ECR_REGISTRY}|${{ steps.login-ecr.outputs.registry }}|g" aws_setup/task_definitions/frontend.json.template
+          sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" aws_setup/task_definitions/frontend.json.template
           
-          echo "::set-output name=taskdef_file::frontend/frontend/docker/task-definition.json"
+          echo "::set-output name=taskdef_file::aws_setup/task_definitions/frontend.json.template"
 
       # Frontend deployment
       - name: Build, tag, and push Frontend Docker image
@@ -58,6 +60,7 @@ jobs:
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-frontend:${{ github.sha }}
 
       - name: Deploy Frontend to ECS
+        id: frontend-deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           service: frontend-service
@@ -76,18 +79,31 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+      - name: Prepare Backend task definition
+        id: prepare-backend-taskdef
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG=${{ github.sha }}
+          
+          # Replace variables in task definition
+          sed -i "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" aws_setup/task_definitions/backend.json.template
+          sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" aws_setup/task_definitions/backend.json.template
+          sed -i "s|\${ECR_REGISTRY}|$ECR_REGISTRY|g" aws_setup/task_definitions/backend.json.template
+          sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws_setup/task_definitions/backend.json.template
+          
+          echo "::set-output name=taskdef_file::aws_setup/task_definitions/backend.json.template"
+
       - name: Fill in the new image ID in the Backend ECS task definition
         id: backend-taskdef
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: backend/backend/docker/task-definition.json
+          task-definition: ${{ steps.prepare-backend-taskdef.outputs.taskdef_file }}
           container-name: backend
-          replacements: |
-            AWS_ACCOUNT_ID: ${{ steps.aws-account.outputs.account_id }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
 
       - name: Deploy Backend to ECS
+        id: backend-deploy
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           service: backend-service
