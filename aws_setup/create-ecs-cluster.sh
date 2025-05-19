@@ -132,6 +132,17 @@ fi
 # Register task definitions
 echo "Registering task definitions..."
 
+# Create CloudWatch log groups if they don't exist
+FE_LOG_GROUP_EXISTS=$(aws --region $AWS_REGION logs describe-log-groups --log-group-name-prefix "/ecs/aurant-dev-frontend" --query 'logGroups[0].logGroupName' --output text)
+if [ -z "$FE_LOG_GROUP_EXISTS" ]; then
+    aws --region $AWS_REGION logs create-log-group --log-group-name "/ecs/aurant-dev-frontend"
+fi
+
+BE_LOG_GROUP_EXISTS=$(aws --region $AWS_REGION logs describe-log-groups --log-group-name-prefix "/ecs/aurant-dev-backend" --query 'logGroups[0].logGroupName' --output text)
+if [ -z "$BE_LOG_GROUP_EXISTS" ]; then
+    aws --region $AWS_REGION logs create-log-group --log-group-name "/ecs/aurant-dev-backend"
+fi
+
 # Get AWS credentials
 ECR_REGISTRY=$(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com)
 IMAGE_TAG=$(git rev-parse HEAD)
