@@ -21,6 +21,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -37,6 +40,9 @@ jobs:
           sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" aws_setup/task_definitions/frontend.json.template
           sed -i "s|\${ECR_REGISTRY}|${{ steps.login-ecr.outputs.registry }}|g" aws_setup/task_definitions/frontend.json.template
           sed -i "s|\${IMAGE_TAG}|${{ github.sha }}|g" aws_setup/task_definitions/frontend.json.template
+          
+          # Validate JSON
+          cat aws_setup/task_definitions/frontend.json.template | jq . > /dev/null
           
           echo "::set-output name=taskdef_file::aws_setup/task_definitions/frontend.json.template"
 
@@ -91,6 +97,9 @@ jobs:
           sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" aws_setup/task_definitions/backend.json.template
           sed -i "s|\${ECR_REGISTRY}|$ECR_REGISTRY|g" aws_setup/task_definitions/backend.json.template
           sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws_setup/task_definitions/backend.json.template
+          
+          # Validate JSON
+          cat aws_setup/task_definitions/backend.json.template | jq . > /dev/null
           
           echo "::set-output name=taskdef_file::aws_setup/task_definitions/backend.json.template"
 
