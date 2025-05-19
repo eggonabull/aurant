@@ -25,3 +25,4 @@ __pycache__/
 # ALB config files
 aws_setup/forward-config.json
 aws_setup/redirect-config.json
+aws_setup/task_definitions/*.json
