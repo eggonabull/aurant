@@ -6,7 +6,7 @@
   "containerDefinitions": [
     {
       "name": "frontend",
-      "image": "${ECR_REGISTRY}/aurant-dev:${IMAGE_TAG}",
+      "image": "${ECR_REGISTRY}/aurant-dev-frontend:${IMAGE_TAG}",
       "portMappings": [
         {
           "containerPort": 3000,
