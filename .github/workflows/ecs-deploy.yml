@@ -25,6 +25,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # Get AWS Account ID
+      - name: Get AWS Account ID
+        id: aws-account
+        run: echo "::set-output name=account_id::$(aws sts get-caller-identity --query 'Account' --output text)"
+
       # Frontend deployment
       - name: Build, tag, and push Frontend Docker image
         env:
@@ -42,6 +47,9 @@ jobs:
         with:
           task-definition: frontend/frontend/docker/task-definition.json
           container-name: frontend
+          replacements:
+            AWS_ACCOUNT_ID: ${{ steps.aws-account.outputs.account_id }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-frontend:${{ github.sha }}
 
       - name: Deploy Frontend to ECS
