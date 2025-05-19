@@ -1,8 +1,10 @@
 #!/bin/bash
+set -x
+set -e
+cd "$(dirname "$0")"
 
 # Source environment variables from .env file in parent directory
 source ../.env
-set -x
 
 # Check required environment variables
 if [ -z "$ACM_CERTIFICATE_ARN" ]; then
@@ -21,14 +23,14 @@ if [ -z "$FRONTEND_SG" ]; then
 fi
 
 # Verify ACM certificate status
-CERT_STATUS=$(aws acm describe-certificate --certificate-arn $ACM_CERTIFICATE_ARN --query 'Certificate.Status' --output text)
+CERT_STATUS=$(aws --region $AWS_REGION acm describe-certificate --certificate-arn $ACM_CERTIFICATE_ARN --query 'Certificate.Status' --output text)
 if [ "$CERT_STATUS" != "ISSUED" ]; then
     echo "Error: ACM certificate status is not ISSUED. Current status: $CERT_STATUS"
     exit 1
 fi
 
 # Get certificate domain name
-CERT_DOMAIN=$(aws acm describe-certificate --certificate-arn $ACM_CERTIFICATE_ARN --query 'Certificate.DomainName' --output text)
+CERT_DOMAIN=$(aws --region $AWS_REGION acm describe-certificate --certificate-arn $ACM_CERTIFICATE_ARN --query 'Certificate.DomainName' --output text)
 if [ -z "$CERT_DOMAIN" ]; then
     echo "Error: Could not get certificate domain name"
     exit 1
@@ -39,10 +41,10 @@ if [ "$CERT_DOMAIN" != "aurant.dev" ]; then
 fi
 
 # Get VPC ID and subnets
-VPC_ID=$(aws ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query 'Vpcs[0].VpcId' --output text)
+VPC_ID=$(aws --region $AWS_REGION ec2 describe-vpcs --filters "Name=isDefault,Values=true" --query 'Vpcs[0].VpcId' --output text)
 
 # Get all available subnets in the VPC
-SUBNETS=$(aws ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query 'Subnets[*].[SubnetId,AvailabilityZone]' --output json)
+SUBNETS=$(aws --region $AWS_REGION ec2 describe-subnets --filters "Name=vpc-id,Values=$VPC_ID" --query 'Subnets[*].[SubnetId,AvailabilityZone]' --output json)
 
 # Extract at least 2 subnets from different AZs
 SUBNET1=$(echo $SUBNETS | jq -r '.[0][0]')
@@ -54,12 +56,15 @@ if [ -z "$SUBNET1" ] || [ -z "$SUBNET2" ]; then
     exit 1
 fi
 
-# Create target group for frontend
-FRONTEND_TG_ARN=$(aws elbv2 create-target-group \
+
+
+# Create target group for frontend with IP target type for FARGATE compatibility
+FRONTEND_TG_ARN=$(aws --region $AWS_REGION elbv2 create-target-group \
     --name aurant-frontend-tg \
     --protocol HTTP \
     --port 3000 \
     --vpc-id $VPC_ID \
+    --target-type ip \
     --health-check-protocol HTTP \
     --health-check-port traffic-port \
     --health-check-path /health \
@@ -80,7 +85,7 @@ echo "Frontend Target Group ARN: $FRONTEND_TG_ARN"
 ESCAPED_TG_ARN=$(echo "$FRONTEND_TG_ARN" | sed 's|/|\\/|g')
 
 # Create Application Load Balancer
-ALB_ARN=$(aws elbv2 create-load-balancer \
+ALB_ARN=$(aws --region $AWS_REGION elbv2 create-load-balancer \
     --name aurant-alb \
     --subnets $SUBNET1 $SUBNET2 \
     --security-groups $FRONTEND_SG \
@@ -95,7 +100,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Get ALB DNS name
-ALB_DNS=$(aws elbv2 describe-load-balancers \
+ALB_DNS=$(aws --region $AWS_REGION elbv2 describe-load-balancers \
     --load-balancer-arns $ALB_ARN \
     --query 'LoadBalancers[0].DNSName' \
     --output text)
@@ -110,7 +115,7 @@ fi
 
 cat forward-config-template.json | sed "s/{{TARGET_GROUP_ARN}}/$ESCAPED_TG_ARN/g" > forward-config.json
 
-HTTPS_LISTENER_ARN=$(aws elbv2 create-listener \
+HTTPS_LISTENER_ARN=$(aws --region $AWS_REGION elbv2 create-listener \
     --load-balancer-arn $ALB_ARN \
     --protocol HTTPS \
     --port 443 \
@@ -129,7 +134,7 @@ fi
 # Escape forward slashes in the ARN
 cat redirect-config-template.json | sed "s/{{TARGET_GROUP_ARN}}/$ESCAPED_TG_ARN/g" > redirect-config.json
 
-HTTP_LISTENER_ARN=$(aws elbv2 create-listener \
+HTTP_LISTENER_ARN=$(aws --region $AWS_REGION elbv2 create-listener \
     --load-balancer-arn $ALB_ARN \
     --protocol HTTP \
     --port 80 \
@@ -142,9 +147,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Wait for listeners to be created
+sleep 5
+
 # Verify listeners are active
-HTTPS_LISTENER_STATUS=$(aws elbv2 describe-listeners --listener-arns $HTTPS_LISTENER_ARN --query 'Listeners[0].State.Code' --output text)
-HTTP_LISTENER_STATUS=$(aws elbv2 describe-listeners --listener-arns $HTTP_LISTENER_ARN --query 'Listeners[0].State.Code' --output text)
+HTTPS_LISTENER_STATUS=$(aws --region $AWS_REGION elbv2 describe-listeners --listener-arns $HTTPS_LISTENER_ARN --query 'Listeners[0].State.Code' --output text)
+HTTP_LISTENER_STATUS=$(aws --region $AWS_REGION elbv2 describe-listeners --listener-arns $HTTP_LISTENER_ARN --query 'Listeners[0].State.Code' --output text)
 
 if [ "$HTTPS_LISTENER_STATUS" != "active" ] || [ "$HTTP_LISTENER_STATUS" != "active" ]; then
     echo "Error: One or more listeners failed to become active"

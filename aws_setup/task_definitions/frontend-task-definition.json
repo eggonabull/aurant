@@ -1,0 +1,39 @@
+{
+  "family": "aurant-dev-frontend",
+  "taskRoleArn": "arn:aws:iam::082690973139:role/aurant-dev-ecs-task-role",
+  "executionRoleArn": "arn:aws:iam::082690973139:role/aurant-dev-ecs-task-execution-role",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "frontend",
+      "image": "082690973139.dkr.ecr.us-west-2.amazonaws.com/aurant-dev-frontend:aa013b65d85157f33971a90d17a3d87d3d2e739f",
+      "portMappings": [
+        {
+          "containerPort": 3000,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/aurant-dev-frontend",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX"
+  }
+}
