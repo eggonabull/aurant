@@ -25,10 +25,18 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      # Get AWS Account ID
-      - name: Get AWS Account ID
-        id: aws-account
-        run: echo "::set-output name=account_id::$(aws sts get-caller-identity --query 'Account' --output text)"
+      # Get AWS Account ID and replace variables in task definition
+      - name: Get AWS Account ID and prepare task definition
+        id: prepare-taskdef
+        run: |
+          # Get AWS account ID
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          
+          # Replace variables in task definition
+          sed -i "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" frontend/frontend/docker/task-definition.json
+          sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" frontend/frontend/docker/task-definition.json
+          
+          echo "::set-output name=taskdef_file::frontend/frontend/docker/task-definition.json"
 
       # Frontend deployment
       - name: Build, tag, and push Frontend Docker image
@@ -45,11 +53,8 @@ jobs:
         id: frontend-taskdef
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: frontend/frontend/docker/task-definition.json
+          task-definition: ${{ steps.prepare-taskdef.outputs.taskdef_file }}
           container-name: frontend
-          replacements: |
-            AWS_ACCOUNT_ID: ${{ steps.aws-account.outputs.account_id }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-frontend:${{ github.sha }}
 
       - name: Deploy Frontend to ECS
