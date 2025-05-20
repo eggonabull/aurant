@@ -11,71 +11,91 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MenuItem, OrderItem, Prisma } from "@prisma/client"
+import crypto from "crypto"
 
 // Menu items data
-const menuItems = {
+type Menu = Record<string, MenuItem[]>
+
+const menuItems: Menu = {
   appetizers: [
-    { id: "a1", name: "Garlic Bread", price: 5.99 },
-    { id: "a2", name: "Caesar Salad", price: 8.99 },
-    { id: "a3", name: "Bruschetta", price: 7.99 },
-    { id: "a4", name: "Mozzarella Sticks", price: 6.99 },
+    { menu_item_id: "a1", name: "Garlic Bread", price: new Prisma.Decimal(5.99), menu_id: "m1", description: "Garlic bread with melted butter", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "a2", name: "Caesar Salad", price: new Prisma.Decimal(8.99), menu_id: "m1", description: "Caesar salad with croutons and parmesan", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "a3", name: "Bruschetta", price: new Prisma.Decimal(7.99), menu_id: "m1", description: "Grilled bread with tomatoes and basil", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "a4", name: "Mozzarella Sticks", price: new Prisma.Decimal(6.99), menu_id: "m1", description: "Mozzarella sticks with marinara sauce", created_at: new Date(), updated_at: new Date() },
   ],
   mains: [
-    { id: "m1", name: "Margherita Pizza", price: 14.99 },
-    { id: "m2", name: "Spaghetti Carbonara", price: 16.99 },
-    { id: "m3", name: "Grilled Salmon", price: 19.99 },
-    { id: "m4", name: "Chicken Parmesan", price: 17.99 },
-    { id: "m5", name: "Beef Burger", price: 15.99 },
-    { id: "m6", name: "Vegetable Stir Fry", price: 13.99 },
+    { menu_item_id: "m1", name: "Margherita Pizza", price: new Prisma.Decimal(14.99), menu_id: "m1", description: "Classic Margherita with fresh mozzarella, tomatoes, and basil", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "m2", name: "Spaghetti Carbonara", price: new Prisma.Decimal(16.99), menu_id: "m1", description: "Spaghetti with creamy sauce, pancetta, eggs, and Parmesan", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "m3", name: "Grilled Salmon", price: new Prisma.Decimal(19.99), menu_id: "m1", description: "Grilled salmon with herbs and lemon", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "m4", name: "Chicken Parmesan", price: new Prisma.Decimal(17.99), menu_id: "m1", description: "Chicken breasts with marinara sauce and melted mozzarella", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "m5", name: "Beef Burger", price: new Prisma.Decimal(15.99), menu_id: "m1", description: "Classic beef burger with lettuce, tomato, and cheese", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "m6", name: "Vegetable Stir Fry", price: new Prisma.Decimal(13.99), menu_id: "m1", description: "Stir-fried vegetables with soy sauce and sesame oil", created_at: new Date(), updated_at: new Date() },
   ],
   desserts: [
-    { id: "d1", name: "Tiramisu", price: 7.99 },
-    { id: "d2", name: "Cheesecake", price: 6.99 },
-    { id: "d3", name: "Chocolate Brownie", price: 5.99 },
-    { id: "d4", name: "Ice Cream Sundae", price: 4.99 },
+    { menu_item_id: "d1", name: "Tiramisu", price: new Prisma.Decimal(7.99), menu_id: "m1", description: "Classic tiramisu with coffee-soaked ladyfingers and mascarpone cheese", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "d2", name: "Cheesecake", price: new Prisma.Decimal(6.99), menu_id: "m1", description: "Classic cheesecake with vanilla bean frosting", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "d3", name: "Chocolate Brownie", price: new Prisma.Decimal(5.99), menu_id: "m1", description: "Rich chocolate brownie with vanilla frosting", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "d4", name: "Ice Cream Sundae", price: new Prisma.Decimal(4.99), menu_id: "m1", description: "Classic ice cream sundae with whipped cream and chocolate sauce", created_at: new Date(), updated_at: new Date() },
   ],
   drinks: [
-    { id: "dr1", name: "Red Wine", price: 9.99 },
-    { id: "dr2", name: "White Wine", price: 8.99 },
-    { id: "dr3", name: "Beer", price: 5.99 },
-    { id: "dr4", name: "Soda", price: 2.99 },
-    { id: "dr5", name: "Lemonade", price: 3.99 },
-    { id: "dr6", name: "Coffee", price: 3.49 },
+    { menu_item_id: "dr1", name: "Red Wine", price: new Prisma.Decimal(9.99), menu_id: "m1", description: "Full-bodied red wine with dark fruit flavors", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "dr2", name: "White Wine", price: new Prisma.Decimal(8.99), menu_id: "m1", description: "Light and refreshing white wine with citrus flavors", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "dr3", name: "Beer", price: new Prisma.Decimal(5.99), menu_id: "m1", description: "Classic beer with a malty flavor", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "dr4", name: "Soda", price: new Prisma.Decimal(2.99), menu_id: "m1", description: "Refreshing soda with a sweet and fizzy taste", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "dr5", name: "Lemonade", price: new Prisma.Decimal(3.99), menu_id: "m1", description: "Citrusy lemonade with a refreshing twist", created_at: new Date(), updated_at: new Date() },
+    { menu_item_id: "dr6", name: "Coffee", price: new Prisma.Decimal(3.49), menu_id: "m1", description: "Rich and bold coffee with a bold flavor", created_at: new Date(), updated_at: new Date() },
   ],
 }
 
+const flatMenu = Object.values(menuItems).flat();
+
 export default function NewOrderPage() {
   const [selectedTable, setSelectedTable] = useState("")
-  const [orderItems, setOrderItems] = useState([])
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [notes, setNotes] = useState("")
 
-  const addItemToOrder = (item) => {
-    const existingItem = orderItems.find((orderItem) => orderItem.id === item.id)
+  const addItemToOrder = (item: MenuItem) => {
+    const existingItem = orderItems.find((orderItem: OrderItem) => orderItem.menu_item_id === item.menu_item_id)
 
     if (existingItem) {
       setOrderItems(
-        orderItems.map((orderItem) =>
-          orderItem.id === item.id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem,
+        orderItems.map((orderItem: OrderItem) =>
+          orderItem.menu_item_id === item.menu_item_id ? { ...orderItem, quantity: orderItem.quantity + 1 } : orderItem,
         ),
       )
     } else {
-      setOrderItems([...orderItems, { ...item, quantity: 1 }])
+      // Create a new OrderItem with required fields
+      setOrderItems([
+        ...orderItems,
+        {
+          order_item_id: crypto.randomUUID(),
+          order_id: crypto.randomUUID(), // This would normally come from the actual order
+          menu_item_id: item.menu_item_id,
+          quantity: 1,
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      ])
     }
-  }
+  };
 
-  const removeItemFromOrder = (itemId) => {
-    const existingItem = orderItems.find((item) => item.id === itemId)
+  const removeItemFromOrder = (itemId: string) => {
+    const existingItem = orderItems.find((item) => item.order_item_id === itemId)
 
     if (existingItem && existingItem.quantity > 1) {
-      setOrderItems(orderItems.map((item) => (item.id === itemId ? { ...item, quantity: item.quantity - 1 } : item)))
+      setOrderItems(orderItems.map((item) => (item.order_item_id === itemId ? { ...item, quantity: item.quantity - 1 } : item)))
     } else {
-      setOrderItems(orderItems.filter((item) => item.id !== itemId))
+      setOrderItems(orderItems.filter((item) => item.order_item_id !== itemId))
     }
-  }
+  };
 
   const calculateTotal = () => {
-    return orderItems.reduce((total, item) => total + item.price * item.quantity, 0)
-  }
+    return orderItems.reduce((total, orderItem) => {
+      const menuItem = flatMenu.find(m => m.menu_item_id === orderItem.menu_item_id);
+      return menuItem ? total + menuItem.price.toNumber() * orderItem.quantity : total;
+    }, 0)
+  };
 
   const handleSubmitOrder = () => {
     // In a real app, this would send the order to a backend
@@ -84,7 +104,7 @@ export default function NewOrderPage() {
     setSelectedTable("")
     setOrderItems([])
     setNotes("")
-  }
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -140,7 +160,7 @@ export default function NewOrderPage() {
               <CardContent>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="table">Select Table</Label>
+                    <Label>Select Table</Label>
                     <Select value={selectedTable} onValueChange={setSelectedTable}>
                       <SelectTrigger id="table">
                         <SelectValue placeholder="Select a table" />
@@ -174,7 +194,7 @@ export default function NewOrderPage() {
                   <TabsContent value="appetizers" className="mt-0">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {menuItems.appetizers.map((item) => (
-                        <Card key={item.id} className="overflow-hidden">
+                        <Card key={item.menu_item_id} className="overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
@@ -199,7 +219,7 @@ export default function NewOrderPage() {
                   <TabsContent value="mains" className="mt-0">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {menuItems.mains.map((item) => (
-                        <Card key={item.id} className="overflow-hidden">
+                        <Card key={item.menu_item_id} className="overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
@@ -224,7 +244,7 @@ export default function NewOrderPage() {
                   <TabsContent value="desserts" className="mt-0">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {menuItems.desserts.map((item) => (
-                        <Card key={item.id} className="overflow-hidden">
+                        <Card key={item.menu_item_id} className="overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
@@ -249,7 +269,7 @@ export default function NewOrderPage() {
                   <TabsContent value="drinks" className="mt-0">
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {menuItems.drinks.map((item) => (
-                        <Card key={item.id} className="overflow-hidden">
+                        <Card key={item.menu_item_id} className="overflow-hidden">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
@@ -290,14 +310,14 @@ export default function NewOrderPage() {
                 {orderItems.length > 0 ? (
                   <div className="space-y-4">
                     {orderItems.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between">
+                      <div key={item.menu_item_id} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1">
                             <Button
                               variant="outline"
                               size="icon"
                               className="h-6 w-6 rounded-full"
-                              onClick={() => removeItemFromOrder(item.id)}
+                              onClick={() => removeItemFromOrder(item.menu_item_id)}
                             >
                               <Minus className="h-3 w-3" />
                               <span className="sr-only">Remove</span>
@@ -307,15 +327,32 @@ export default function NewOrderPage() {
                               variant="outline"
                               size="icon"
                               className="h-6 w-6 rounded-full"
-                              onClick={() => addItemToOrder(item)}
+                              onClick={() => {
+                                const orderItem = item;
+                                const menuItem = flatMenu.find(m => m.menu_item_id === orderItem.menu_item_id);
+                                if (menuItem) {
+                                  addItemToOrder(menuItem)
+                                }
+                              }}
                             >
                               <Plus className="h-3 w-3" />
                               <span className="sr-only">Add</span>
                             </Button>
                           </div>
-                          <span className="text-sm font-medium">{item.name}</span>
+                          <span className="text-sm font-medium">{menuItems.mains.find(m => m.menu_item_id === item.menu_item_id)?.name ||
+                            menuItems.appetizers.find(a => a.menu_item_id === item.menu_item_id)?.name ||
+                            menuItems.desserts.find(d => d.menu_item_id === item.menu_item_id)?.name ||
+                            menuItems.drinks.find(dr => dr.menu_item_id === item.menu_item_id)?.name ||
+                            'Unknown Item'}</span>
                         </div>
-                        <span className="text-sm font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                        ${((menuItem) => {
+                          if (menuItem) {
+                            return <span className="text-sm font-medium">${menuItem.price.toNumber() * item.quantity}</span>;
+                          }
+
+                        })
+                          (flatMenu.find(m => m.menu_item_id === item.menu_item_id))
+                        }
                       </div>
                     ))}
 
@@ -327,7 +364,7 @@ export default function NewOrderPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="notes">Order Notes</Label>
+                      <Label>Order Notes</Label>
                       <Input
                         id="notes"
                         placeholder="Special instructions..."

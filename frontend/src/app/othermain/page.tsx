@@ -60,7 +60,7 @@ export default function TablesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Table Management</CardTitle>
-            <CardDescription>View and manage your restaurant's tables.</CardDescription>
+            <CardDescription>View and manage your restaurant&apos;s tables.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

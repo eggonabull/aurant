@@ -60,7 +60,7 @@ export default function TablesPage() {
         <Card>
           <CardHeader>
             <CardTitle>Table Management</CardTitle>
-            <CardDescription>View and manage your restaurant's tables.</CardDescription>
+            <CardDescription>View and manage your restaurant&apos;s tables.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -71,10 +71,10 @@ export default function TablesPage() {
                 return (
                   <Card key={table} className={`overflow-hidden ${isOccupied ? "border-red-200" : "border-green-200"}`}>
                     <CardHeader className={`p-3 ${isOccupied ? "bg-red-50" : "bg-green-50"}`}>
-                      <CardTitle className="text-base">Table {table}</CardTitle>
+                      <CardTitle>Table {table}</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-3">
-                      <div className="space-y-2">
+                    <CardContent>
+                      <div className="p-3 space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Status:</span>
                           <span className={isOccupied ? "text-red-600" : "text-green-600"}>

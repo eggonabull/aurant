@@ -12,7 +12,7 @@ const inputVariants = cva(
         default: "",
         outline: "border border-input",
       },
-      size: {
+      inputSize: {
         default: "h-9 px-3 py-1",
         sm: "h-8 rounded-md px-2 py-1 text-sm",
         lg: "h-10 rounded-md px-3 py-2 text-lg",
@@ -20,7 +20,7 @@ const inputVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      inputSize: "default"
     },
   }
 )
@@ -32,11 +32,11 @@ export interface InputProps
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, inputSize, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "input"
     return (
       <Comp
-        className={cn(inputVariants({ variant, size, className }))}
+        className={cn(inputVariants({ variant, inputSize, className }))}
         ref={ref}
         {...props}
       />

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, Edit, Plus, Search, Trash2, Utensils } from "lucide-react"
 
@@ -72,7 +73,7 @@ export default function MenuPage() {
             <Card>
               <CardHeader>
                 <CardTitle>All Menu Items</CardTitle>
-                <CardDescription>View and manage your restaurant's menu items.</CardDescription>
+                <CardDescription>View and manage your restaurant&apos;s menu items.</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,7 +144,7 @@ export default function MenuPage() {
                   ].map((item) => (
                     <Card key={item.id} className="overflow-hidden">
                       <div className="aspect-video w-full overflow-hidden">
-                        <img
+                        <Image
                           src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           className="object-cover w-full h-full"
@@ -200,7 +201,7 @@ export default function MenuPage() {
                   ].map((item) => (
                     <Card key={item.id} className="overflow-hidden">
                       <div className="aspect-video w-full overflow-hidden">
-                        <img
+                        <Image
                           src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           className="object-cover w-full h-full"
