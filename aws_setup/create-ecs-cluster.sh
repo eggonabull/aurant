@@ -41,8 +41,47 @@ if [ -z "$TASK_EXECUTION_ROLE" ]; then
     aws --region $AWS_REGION iam create-role --role-name aurant-dev-ecs-task-execution-role \
     --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{"Sid": "","Effect": "Allow","Principal": {"Service": "ecs-tasks.amazonaws.com"},"Action": "sts:AssumeRole"}]}'
 
+    # Attach standard ECS execution policy
     aws --region $AWS_REGION iam attach-role-policy --role-name aurant-dev-ecs-task-execution-role \
     --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+    # Add CloudWatch logs permissions
+    aws --region $AWS_REGION iam attach-role-policy --role-name aurant-dev-ecs-task-execution-role \
+    --policy-arn arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+    # Create custom policy for more granular permissions
+    POLICY_JSON=$(cat <<EOF
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams"
+                ],
+                "Resource": [
+                    "arn:aws:logs:*:*:log-group:/ecs/aurant-dev-frontend:*",
+                    "arn:aws:logs:*:*:log-group:/ecs/aurant-dev-backend:*"
+                ]
+            }
+        ]
+    }
+EOF
+    )
+
+    # Create and attach custom policy
+    POLICY_ARN=$(aws --region $AWS_REGION iam create-policy \
+    --policy-name aurant-dev-ecs-logs-policy \
+    --policy-document "$POLICY_JSON" \
+    --query 'Policy.Arn' \
+    --output text)
+
+    aws --region $AWS_REGION iam attach-role-policy --role-name aurant-dev-ecs-task-execution-role \
+    --policy-arn "$POLICY_ARN"
 
     # Create ECS Task Role
     aws --region $AWS_REGION iam create-role \

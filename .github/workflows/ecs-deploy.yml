@@ -79,6 +79,42 @@ jobs:
           cluster: aurant
           task-definition: ${{ steps.frontend-taskdef.outputs.task-definition }}
           wait-for-service-stability: true
+        env:
+          AWS_DEFAULT_REGION: ${{ vars.AWS_REGION }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        continue-on-error: false
+
+      - name: Check ECS Service Status
+        if: always()
+        run: |
+          echo "Checking ECS service status..."
+          aws ecs describe-services --cluster aurant --services frontend-service --region ${{ vars.AWS_REGION }}
+          echo "Checking ECS tasks..."
+          aws ecs list-tasks --cluster aurant --service-name frontend-service --region ${{ vars.AWS_REGION }}
+          echo "Checking task details..."
+          aws ecs describe-tasks --cluster aurant --tasks $(aws ecs list-tasks --cluster aurant --service-name frontend-service --region ${{ vars.AWS_REGION }} --query 'taskArns[*]' --output text) --region ${{ vars.AWS_REGION }} || true
+
+      - name: Check CloudWatch Logs
+        if: always()
+        run: |
+          echo "Checking CloudWatch log streams..."
+          aws logs describe-log-streams --log-group-name "/ecs/aurant-dev-frontend" --region ${{ vars.AWS_REGION }}
+          echo "Getting log events..."
+          aws logs get-log-events --log-group-name "/ecs/aurant-dev-frontend" --log-stream-name $(aws logs describe-log-streams --log-group-name "/ecs/aurant-dev-frontend" --region ${{ vars.AWS_REGION }} --query 'logStreams[0].logStreamName' --output text) --region ${{ vars.AWS_REGION }} || true
+
+      - name: Check IAM Permissions
+        if: always()
+        run: |
+          echo "Checking IAM roles..."
+          aws iam get-role --role-name aurant-dev-ecs-task-execution-role --region ${{ vars.AWS_REGION }}
+          aws iam get-role --role-name aurant-dev-ecs-task-role --region ${{ vars.AWS_REGION }}
+
+      - name: Check ECR Images
+        if: always()
+        run: |
+          echo "Checking ECR images..."
+          aws ecr describe-images --repository-name aurant-dev-frontend --image-ids imageTag=${{ github.sha }} --region ${{ vars.AWS_REGION }}
+          aws ecr describe-images --repository-name aurant-dev-backend --image-ids imageTag=${{ github.sha }} --region ${{ vars.AWS_REGION }}
 
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
