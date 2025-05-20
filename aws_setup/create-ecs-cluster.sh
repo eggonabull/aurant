@@ -133,15 +133,48 @@ fi
 echo "Registering task definitions..."
 
 # Create CloudWatch log groups if they don't exist
-FE_LOG_GROUP_EXISTS=$(aws --region $AWS_REGION logs describe-log-groups --log-group-name-prefix "/ecs/aurant-dev-frontend" --query 'logGroups[0].logGroupName' --output text)
-if [ -z "$FE_LOG_GROUP_EXISTS" ]; then
-    aws --region $AWS_REGION logs create-log-group --log-group-name "/ecs/aurant-dev-frontend"
+create_log_group() {
+    local log_group_name="$1"
+    local max_retries=5
+    local retry_delay=5
+
+    for ((i=0; i<$max_retries; i++)); do
+        EXISTING_GROUP=$(aws --region $AWS_REGION logs describe-log-groups --log-group-name-prefix "$log_group_name" --query 'logGroups[0].logGroupName' --output text)
+        # IF group is not empty and is not "None"
+        if [ -n "$EXISTING_GROUP" ] && [ "$EXISTING_GROUP" != "None" ]; then
+            echo "Log group $log_group_name already exists"
+            return 0
+        fi
+
+        echo "Creating log group: $log_group_name"
+        if aws --region $AWS_REGION logs create-log-group --log-group-name "$log_group_name" 2>/dev/null; then
+            echo "Successfully created log group: $log_group_name"
+            return 0
+        fi
+
+        echo "Failed to create log group $log_group_name, retrying in $retry_delay seconds..."
+        sleep $retry_delay
+        retry_delay=$((retry_delay * 2))  # Exponential backoff
+    done
+
+    echo "Failed to create log group $log_group_name after $max_retries attempts"
+    return 1
+}
+
+# Create frontend log group
+if ! create_log_group "/ecs/aurant-dev-frontend"; then
+    echo "Error: Failed to create frontend log group"
+    exit 1
 fi
 
-BE_LOG_GROUP_EXISTS=$(aws --region $AWS_REGION logs describe-log-groups --log-group-name-prefix "/ecs/aurant-dev-backend" --query 'logGroups[0].logGroupName' --output text)
-if [ -z "$BE_LOG_GROUP_EXISTS" ]; then
-    aws --region $AWS_REGION logs create-log-group --log-group-name "/ecs/aurant-dev-backend"
+# Create backend log group
+if ! create_log_group "/ecs/aurant-dev-backend"; then
+    echo "Error: Failed to create backend log group"
+    exit 1
 fi
+
+# Wait briefly for log groups to be fully available
+sleep 5
 
 # Get AWS credentials
 ECR_REGISTRY=$(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com)
