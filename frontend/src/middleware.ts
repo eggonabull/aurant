@@ -4,13 +4,21 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   
   // Public paths that don't require authentication
-  const publicPaths = ['/login', '/register', '/auth'];
+  const publicPaths = [
+    '/login',
+    '/register',
+    '/auth',
+    '/dashboard',
+    '/blog',
+    '/menu',
+    '/features',
+  ];
   
   // Get the session token from cookies
   const token = request.cookies.get('session_token')?.value;
   
   // If the path is public, allow access
-  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
+  if (publicPaths.some(path => request.nextUrl.pathname.startsWith(path)) || request.nextUrl.pathname === "/") {
     return NextResponse.next();
   }
   
