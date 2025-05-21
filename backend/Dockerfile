@@ -5,7 +5,13 @@ WORKDIR /app
 # Copy the Cargo.toml and Cargo.lock files
 COPY . .
 
-# Install dependencies
+# Install SQLx CLI
+RUN cargo install sqlx-cli --no-default-features --features postgres
+
+# Prepare SQLx queries
+RUN cargo sqlx prepare
+
+# Install dependencies and build
 RUN cargo build --release
 
 FROM alpine:latest
