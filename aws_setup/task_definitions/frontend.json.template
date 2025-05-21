@@ -3,6 +3,7 @@
   "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-role",
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-execution-role",
   "networkMode": "awsvpc",
+  "enableExecuteCommand": true,
   "containerDefinitions": [
     {
       "name": "frontend",
