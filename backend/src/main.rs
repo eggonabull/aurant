@@ -9,10 +9,13 @@ use tracing_subscriber;
 use serde_json::json;
 use chrono::Utc;
 use sqlx::PgPool;
+use dotenv::dotenv;
 mod db;
 
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
     // Initialize tracing
     tracing_subscriber::fmt::init();
 
