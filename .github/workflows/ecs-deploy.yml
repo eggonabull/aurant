@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  frontend:
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -79,6 +79,24 @@ jobs:
           cluster: aurant
           task-definition: ${{ steps.frontend-taskdef.outputs.task-definition }}
           wait-for-service-stability: true
+        
+  backend:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
@@ -101,6 +119,7 @@ jobs:
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
+          image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
           task-definition: aws_setup/task_definitions/backend.json.template
           container-name: backend
           environment-variables: |
@@ -110,9 +129,9 @@ jobs:
             AWS_REGION=${{ vars.AWS_REGION }}
             ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
             IMAGE_TAG=${{ github.sha }}
+
           secrets: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-          image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
 
       - name: Deploy Backend to ECS
         id: backend-deploy
