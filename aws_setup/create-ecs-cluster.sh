@@ -261,6 +261,7 @@ sleep 5
 aws --region $AWS_REGION ecs create-service \
     --cluster aurant \
     --service-name frontend-service \
+    --enable-execute-command \
     --task-definition $FRONTEND_TASK_DEFINITION \
     --desired-count 1 \
     --launch-type FARGATE \
