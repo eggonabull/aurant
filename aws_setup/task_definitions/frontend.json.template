@@ -6,6 +6,7 @@
   "containerDefinitions": [
     {
       "name": "frontend",
+      "enableExecuteCommand": true,
       "image": "${ECR_REGISTRY}/aurant-dev-frontend:${IMAGE_TAG}",
       "portMappings": [
         {
