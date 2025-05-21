@@ -1,5 +1,6 @@
-FROM rust:1.87-bullseye as builder
+FROM rust:1.87-bullseye AS builder
 
+ENV SQLX_OFFLINE true
 WORKDIR /app
 
 # Install PostgreSQL client for SQLx
