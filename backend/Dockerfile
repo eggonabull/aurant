@@ -1,18 +1,20 @@
-FROM rust:1.70-bullseye
+FROM rust:1.87 as builder
 
 WORKDIR /app
 
 # Copy the Cargo.toml and Cargo.lock files
-COPY Cargo.toml Cargo.lock ./
+COPY . .
 
 # Install dependencies
 RUN cargo build --release
 
-# Copy the source code
-COPY src ./src
+FROM alpine:latest
 
-# Build the application
-RUN cargo build --release
+# Set the working directory
+WORKDIR /app
+
+# Copy the binary from the previous stage
+COPY --from=builder /app/target/release/backend .
 
 # Set the entrypoint
-ENTRYPOINT ["./target/release/backend"]
+ENTRYPOINT ["./backend"]

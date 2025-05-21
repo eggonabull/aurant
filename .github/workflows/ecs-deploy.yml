@@ -83,6 +83,7 @@ jobs:
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: aurant-dev-backend
           IMAGE_TAG: ${{ github.sha }}
