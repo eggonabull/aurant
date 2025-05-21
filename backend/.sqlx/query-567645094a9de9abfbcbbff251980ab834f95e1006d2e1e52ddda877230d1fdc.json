@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        CREATE TABLE IF NOT EXISTS staff (\n            staff_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n            restaurant_id UUID REFERENCES restaurants(restaurant_id),\n            user_id UUID REFERENCES users(user_id),\n            position TEXT NOT NULL,\n            hire_date TIMESTAMPTZ DEFAULT NOW(),\n            is_active BOOLEAN DEFAULT true,\n            created_at TIMESTAMPTZ DEFAULT NOW(),\n            updated_at TIMESTAMPTZ DEFAULT NOW()\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "567645094a9de9abfbcbbff251980ab834f95e1006d2e1e52ddda877230d1fdc"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        CREATE TABLE IF NOT EXISTS order_items (\n            order_item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n            order_id UUID REFERENCES orders(id),\n            menu_item_id UUID REFERENCES menu_items(id),\n            quantity INTEGER NOT NULL,\n            price DECIMAL(10,2) NOT NULL,\n            created_at TIMESTAMPTZ DEFAULT NOW(),\n            updated_at TIMESTAMPTZ DEFAULT NOW()\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "573d02719af49c6990f4aa397ff7120aef650377fb8b759151304112b34b097f"
+}

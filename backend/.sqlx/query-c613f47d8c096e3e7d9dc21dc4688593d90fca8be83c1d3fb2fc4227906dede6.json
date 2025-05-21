@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        CREATE TABLE IF NOT EXISTS users (\n            user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n            email TEXT NOT NULL UNIQUE,\n            password_hash TEXT NOT NULL,\n            first_name TEXT,\n            last_name TEXT,\n            role TEXT NOT NULL DEFAULT 'user',\n            created_at TIMESTAMPTZ DEFAULT NOW(),\n            updated_at TIMESTAMPTZ DEFAULT NOW(),\n            last_login TIMESTAMPTZ,\n            is_active BOOLEAN DEFAULT true\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "c613f47d8c096e3e7d9dc21dc4688593d90fca8be83c1d3fb2fc4227906dede6"
+}
