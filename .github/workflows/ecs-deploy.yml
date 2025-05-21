@@ -98,10 +98,30 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Prepare Backend task definition
+        id: prepare-backend-taskdef-test
+        if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+
+      - name: Test Backend Task Definition
+        id: backend-taskdef-test
+        if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
+          task-definition: aws_setup/task_definitions/backend-task-definition.json
+          container-name: backend
+          replacements: |
+            AWS_ACCOUNT_ID: ${{ steps.prepare-backend-taskdef-test.outputs.AWS_ACCOUNT_ID }}
+            AWS_REGION: ${{ vars.AWS_REGION }}
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            IMAGE_TAG: ${{ github.sha }}
+            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: aurant-dev-backend
           IMAGE_TAG: ${{ github.sha }}
