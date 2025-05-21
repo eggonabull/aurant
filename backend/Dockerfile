@@ -8,8 +8,11 @@ COPY . .
 # Install SQLx CLI
 RUN cargo install sqlx-cli --no-default-features --features postgres
 
-# Prepare SQLx queries
-RUN cargo sqlx prepare
+# Set SQLx to offline mode
+RUN echo "DATABASE_URL=postgresql://user:password@localhost:5432/db" > .env
+
+# Prepare SQLx queries in offline mode
+RUN cargo sqlx prepare -- --offline
 
 # Install dependencies and build
 RUN cargo build --release
