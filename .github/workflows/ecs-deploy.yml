@@ -124,10 +124,10 @@ jobs:
           
           # Replace variables in task definition
           AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID" \
-          AWS_REGION='${{ vars.AWS_REGION }}' \
+          AWS_REGION="${{ vars.AWS_REGION }}" \
           ECR_REGISTRY="$ECR_REGISTRY" \
           IMAGE_TAG="$IMAGE_TAG" \
-          DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+          DATABASE_URL="${{ secrets.DATABASE_URL }}" \
           envsubst < aws_setup/task_definitions/backend.json.template > aws_setup/task_definitions/backend-task-definition.json
 
           # Validate JSON and create temporary file
