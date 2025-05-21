@@ -2,6 +2,7 @@ FROM node:24-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache curl
 RUN npm install --update npm
 
 # Install dependencies and TypeScript
