@@ -96,38 +96,22 @@ jobs:
             echo "Warning: Backend directory not found, skipping backend deployment"
           fi
 
-      - name: Prepare Backend task definition
-        id: prepare-backend-taskdef
-        if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
-        run: |
-          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG=${{ github.sha }}
-          
-          # Replace variables in task definition
-          sed -i "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" aws_setup/task_definitions/backend.json.template
-          sed -i "s|\${AWS_REGION}|${{ vars.AWS_REGION }}|g" aws_setup/task_definitions/backend.json.template
-          sed -i "s|\${ECR_REGISTRY}|$ECR_REGISTRY|g" aws_setup/task_definitions/backend.json.template
-          sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" aws_setup/task_definitions/backend.json.template
-          
-          # Validate JSON and create temporary file
-          cat aws_setup/task_definitions/backend.json.template | jq . > aws_setup/task_definitions/backend-task-definition.json
-          
-          # Output path to the validated file
-          echo "taskdef_file=aws_setup/task_definitions/backend-task-definition.json" >> $GITHUB_OUTPUT
-
       - name: Fill in the new image ID in the Backend ECS task definition
         id: backend-taskdef
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ${{ steps.prepare-backend-taskdef.outputs.taskdef_file }}
+          task-definition: aws_setup/task_definitions/backend.json.template
           container-name: backend
-          replacements: |
-            AWS_ACCOUNT_ID: ${{ steps.prepare-backend-taskdef.outputs.AWS_ACCOUNT_ID }}
-            AWS_REGION: ${{ vars.AWS_REGION }}
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            IMAGE_TAG: ${{ github.sha }}
+          environment-variables: |
+            RUST_LOG=info
+            ENVIRONMENT=prod
+            AWS_ACCOUNT_ID=${{ steps.prepare-backend-taskdef.outputs.AWS_ACCOUNT_ID }}
+            AWS_REGION=${{ vars.AWS_REGION }}
+            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+            IMAGE_TAG=${{ github.sha }}
+          secrets: |
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
 
       - name: Deploy Backend to ECS

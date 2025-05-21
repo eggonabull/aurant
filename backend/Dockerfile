@@ -12,9 +12,6 @@ RUN cargo install sqlx-cli --no-default-features --features postgres
 # Copy the Cargo.toml and Cargo.lock files
 COPY Cargo.toml Cargo.lock ./
 
-# Set SQLx to offline mode
-RUN echo "DATABASE_URL=postgresql://user:password@localhost:5432/db" > .env
-
 COPY . .
 
 RUN cargo build --release

@@ -1,7 +1,6 @@
 use axum::{
     routing::get,
     Router,
-    response::Html,
     Json,
 };
 use std::net::SocketAddr;
@@ -37,8 +36,11 @@ async fn main() {
         .unwrap();
 }
 
-async fn health_check() -> Html<&'static str> {
-    Html("<h1>jazz.menu backend is healthy!</h1>")
+async fn health_check() -> Json<serde_json::Value> {
+    Json(json!({
+        "status": "ok",
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    }))
 }
 
 async fn echo_handler() -> Json<serde_json::Value> {

@@ -18,8 +18,19 @@
         {
           "name": "RUST_LOG",
           "value": "info"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "${DATABASE_URL}"
         }
       ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -v -f http://localhost:3000/health || exit 1"],
+        "interval": 30,
+        "timeout": 15,
+        "retries": 3,
+        "startPeriod": 30
+      },
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
