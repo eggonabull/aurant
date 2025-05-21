@@ -6,6 +6,9 @@
   "containerDefinitions": [
     {
       "name": "frontend",
+      "linuxParameters": {
+        "initProcessEnabled": true
+      },
       "enableExecuteCommand": true,
       "image": "${ECR_REGISTRY}/aurant-dev-frontend:${IMAGE_TAG}",
       "portMappings": [
