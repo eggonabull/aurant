@@ -1,4 +1,4 @@
-FROM rust:1.87-slim-bullseye as builder
+FROM rust:1.87-bullseye as builder
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY . .
 
 RUN cargo build --release
 
-FROM rust:1.87-slim-bullseye
+FROM rust:1.87-bullseye
 
 # Set the working directory
 WORKDIR /app
