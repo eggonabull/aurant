@@ -3,17 +3,13 @@
   "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-role",
   "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-execution-role",
   "networkMode": "awsvpc",
-  "enableExecuteCommand": true,
   "containerDefinitions": [
     {
       "name": "frontend",
-      "linuxParameters": {
-        "initProcessEnabled": true
-      },
-      "enableExecuteCommand": true,
       "image": "${ECR_REGISTRY}/aurant-dev-frontend:${IMAGE_TAG}",
       "portMappings": [
         {
+          "hostPort": 3000,
           "containerPort": 3000,
           "protocol": "tcp"
         }
@@ -26,10 +22,10 @@
         }
       ],
       "healthCheck": {
-        "command": ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"],
+        "command": ["CMD-SHELL", "curl -v -f http://localhost:3000/health || exit 1"],
         "interval": 60,
-        "timeout": 10,
-        "retries": 2,
+        "timeout": 15,
+        "retries": 3,
         "startPeriod": 60
       },
       "logConfiguration": {
