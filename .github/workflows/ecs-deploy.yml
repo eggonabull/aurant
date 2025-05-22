@@ -104,20 +104,36 @@ jobs:
         run: |
           AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
 
+      - name: Prepare Backend task definition
+        id: prepare-backend-taskdef
+        if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
+        run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          IMAGE_TAG="${{ github.sha }}"
+          
+          # Replace variables in task definition
+          AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID" \
+          AWS_REGION='${{ vars.AWS_REGION }}' \
+          ECR_REGISTRY="$ECR_REGISTRY" \
+          IMAGE_TAG="$IMAGE_TAG" \
+          DATABASE_URL='${{ secrets.DATABASE_URL }}' \
+          envsubst < aws_setup/task_definitions/backend.json.template > aws_setup/task_definitions/backend-task-definition.json
+
+          # Validate JSON and create temporary file
+          cat aws_setup/task_definitions/backend-task-definition.json | jq . > aws_setup/task_definitions/backend-task-definition.json
+          
+          # Output path to the validated file
+          echo "taskdef_file=aws_setup/task_definitions/backend-task-definition.json" >> $GITHUB_OUTPUT
+
       - name: Test Backend Task Definition
         id: backend-taskdef-test
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
-          task-definition: aws_setup/task_definitions/backend.json.template
+          task-definition: ${{ steps.prepare-backend-taskdef.outputs.taskdef_file }}
           container-name: backend
-          environment-variables: |
-            AWS_REGION="afwe:fwefweoi"
-            IMAGE_TAG="wfi:/wefje\"wfeowiefj"
-            ECR_REGISTRY="wfeijwef:fweoijf\" wfoef "
-            AWS_ACCOUNT_ID="fwoifjweaafe"
-            DATABASE_URL="weofijweofij"
 
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
