@@ -20,6 +20,10 @@ module.exports = {
           "value": "info"
         },
         {
+          "name": "RUST_BACKTRACE",
+          "value": "full"
+        },
+        {
           "name": "DATABASE_URL",
           "value": `${process.env.DATABASE_URL}`
         }
