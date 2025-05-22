@@ -118,10 +118,8 @@ jobs:
           ECR_REGISTRY="$ECR_REGISTRY" \
           IMAGE_TAG="$IMAGE_TAG" \
           DATABASE_URL='${{ secrets.DATABASE_URL }}' \
-          node backend-task-definition.ts >> backend-task-definition.json
-          
-          # envsubst < aws_setup/task_definitions/backend.json.template > aws_setup/task_definitions/backend-task-definition.json
-          
+          node aws_setup/task_definitions/backend-task-definition.ts >> aws_setup/task_definitions/backend-task-definition.json
+
           # Output path to the validated file
           echo "taskdef_file=aws_setup/task_definitions/backend-task-definition.json" >> $GITHUB_OUTPUT
 
