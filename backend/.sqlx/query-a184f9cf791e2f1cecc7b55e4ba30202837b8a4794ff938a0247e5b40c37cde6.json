@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        CREATE TABLE IF NOT EXISTS tables (\n            table_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),\n            restaurant_id UUID REFERENCES restaurants(restaurant_id),\n            number INTEGER NOT NULL,\n            capacity INTEGER NOT NULL,\n            created_at TIMESTAMPTZ DEFAULT NOW(),\n            updated_at TIMESTAMPTZ DEFAULT NOW()\n        )\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "a184f9cf791e2f1cecc7b55e4ba30202837b8a4794ff938a0247e5b40c37cde6"
+}
