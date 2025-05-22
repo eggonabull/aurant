@@ -1,12 +1,12 @@
-{
+module.exports = {
   "family": "aurant-dev-backend",
-  "taskRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-role",
-  "executionRoleArn": "arn:aws:iam::${AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-execution-role",
+  "taskRoleArn": `arn:aws:iam::${process.env.AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-role`,
+  "executionRoleArn": `arn:aws:iam::${process.env.AWS_ACCOUNT_ID}:role/aurant-dev-ecs-task-execution-role`,
   "networkMode": "awsvpc",
   "containerDefinitions": [
     {
       "name": "backend",
-      "image": "${ECR_REGISTRY}/aurant-dev-backend:${IMAGE_TAG}",
+      "image": `${process.env.ECR_REGISTRY}/aurant-dev-backend:${process.env.IMAGE_TAG}`,
       "portMappings": [
         {
           "containerPort": 8080,
@@ -21,7 +21,7 @@
         },
         {
           "name": "DATABASE_URL",
-          "value": "${DATABASE_URL}"
+          "value": `${process.env.DATABASE_URL}`
         }
       ],
       "healthCheck": {
@@ -35,7 +35,7 @@
         "logDriver": "awslogs",
         "options": {
           "awslogs-group": "/ecs/aurant-dev-backend",
-          "awslogs-region": "${AWS_REGION}",
+          "awslogs-region": `${process.env.AWS_REGION}`,
           "awslogs-stream-prefix": "ecs"
         }
       }
@@ -48,3 +48,10 @@
     "operatingSystemFamily": "LINUX"
   }
 }
+
+var ConfigurationJSON = JSON.stringify(module.exports);
+const config = module.exports;
+
+const jsonConfig = JSON.parse(JSON.stringify(ConfigurationJSON))
+
+console.log(jsonConfig)

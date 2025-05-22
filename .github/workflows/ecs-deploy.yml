@@ -99,6 +99,11 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Installing the Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 24
+
       - name: Prepare Backend task definition
         id: prepare-backend-taskdef-test
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
@@ -113,10 +118,9 @@ jobs:
           ECR_REGISTRY="$ECR_REGISTRY" \
           IMAGE_TAG="$IMAGE_TAG" \
           DATABASE_URL='${{ secrets.DATABASE_URL }}' \
-          envsubst < aws_setup/task_definitions/backend.json.template > aws_setup/task_definitions/backend-task-definition.json
-
-          # Validate JSON and create temporary file
-          cat aws_setup/task_definitions/backend-task-definition.json | jq . > aws_setup/task_definitions/backend-task-definition.json
+          node backend-task-definition.ts >> backend-task-definition.json
+          
+          # envsubst < aws_setup/task_definitions/backend.json.template > aws_setup/task_definitions/backend-task-definition.json
           
           # Output path to the validated file
           echo "taskdef_file=aws_setup/task_definitions/backend-task-definition.json" >> $GITHUB_OUTPUT
