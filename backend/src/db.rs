@@ -7,6 +7,7 @@ pub async fn init_db() -> Result<PgPool> {
         .expect("DATABASE_URL must be set");
 
     // Now connect to our new database
+    println!("Connecting to database: {}", database_url);
     let pool = PgPool::connect(&database_url).await?;
     
     // Enable UUID extension
