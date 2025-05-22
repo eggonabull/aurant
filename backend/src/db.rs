@@ -20,18 +20,6 @@ pub async fn init_db() -> Result<PgPool> {
     println!("  Scheme: {}", url.scheme());
     println!("  Username: {}", url.username());
     println!("  Path: {}", url.path());
-    
-    // connect without specifying the database
-    let db_url = format!("postgresql://{}:{}@{}:{}/", url.username(), url.password().unwrap_or(""), host, port);
-    let pool = PgPool::connect_with(PgConnectOptions::from_str(&db_url)?)
-        .await?;
-    
-    // create the database if it doesn't exist
-    let db_name = url.path().split('/').last().unwrap_or("unknown");
-    let create_db_query = format!("CREATE DATABASE \"{}\";", db_name);
-    sqlx::query(&create_db_query)
-        .execute(&pool)
-        .await?;
 
     // reconnect to the database
     let pool = PgPool::connect_with(PgConnectOptions::from_str(&database_url)?)
