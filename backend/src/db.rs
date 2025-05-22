@@ -2,6 +2,8 @@ use sqlx::postgres::PgPool;
 use std::env;
 use anyhow::Result;
 use url::Url;
+use std::str::FromStr;
+use sqlx::postgres::PgConnectOptions;
 
 pub async fn init_db() -> Result<PgPool> {
     let database_url = env::var("DATABASE_URL")
@@ -11,29 +13,28 @@ pub async fn init_db() -> Result<PgPool> {
     let url = Url::parse(&database_url).expect("Invalid DATABASE_URL format");
     let host = url.host_str().unwrap_or("unknown");
     let port = url.port().unwrap_or(5432);
-
+    
     println!("Database connection details:");
     println!("  Host: {}", host);
     println!("  Port: {}", port);
     println!("  Scheme: {}", url.scheme());
     println!("  Username: {}", url.username());
     println!("  Path: {}", url.path());
-
+    
     // Add connection timeout
     println!("Attempting to connect to database with 30s timeout...");
-    let pool = PgPool::connect_with(sqlx::postgres::PgConnectOptions::from_str(&database_url)?
-        .connect_timeout(std::time::Duration::from_secs(30)))
+    let pool = PgPool::connect_with(PgConnectOptions::from_str(&database_url)?)
         .await?;
 
     // Add connection test
     println!("Testing database connection...");
     let test_query = sqlx::query!("SELECT 1 as test").fetch_one(&pool).await?;
     println!("Database connection test successful!");
-
+    
     // Enable UUID extension
     sqlx::query!(
         r#"
-        CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
         "#
     ).execute(&pool).await?;
 

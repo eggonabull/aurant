@@ -2,23 +2,18 @@
 
 # This script will analyze your AWS security groups to ensure proper connectivity between ECS and RDS
 
-# Get the ECS task security group ID
-ECS_SG_ID=$(aws ec2 describe-security-groups --filters "Name=tag:aws:cloudformation:logical-id,Values=EcsTaskSecurityGroup" --query 'SecurityGroups[*].GroupId' --output text)
-if [ -z "$ECS_SG_ID" ]; then
-    echo "Error: Could not find ECS task security group"
-    exit 1
-fi
+# Get all security groups with detailed information
+SGS=$(aws ec2 describe-security-groups --query 'SecurityGroups[*].[GroupId,GroupName,Description,Tags[?Key==`Name`].Value[]]' --output text)
 
-echo "Found ECS Task Security Group: $ECS_SG_ID"
+# Show all security groups with their details
+echo "Listing all security groups with details:"
+echo "$SGS" | column -t
 
-# Get the RDS security group ID
-RDS_SG_ID=$(aws ec2 describe-security-groups --filters "Name=tag:aws:cloudformation:logical-id,Values=RdsSecurityGroup" --query 'SecurityGroups[*].GroupId' --output text)
-if [ -z "$RDS_SG_ID" ]; then
-    echo "Error: Could not find RDS security group"
-    exit 1
-fi
+echo "\nPlease identify:"
+echo "1. The security group used by your ECS tasks"
+echo "2. The security group used by your RDS instance"
 
-echo "Found RDS Security Group: $RDS_SG_ID"
+echo "\nIf you can provide the security group IDs, I can analyze their rules:"
 
 echo "\nAnalyzing ECS Task Security Group Inbound Rules:"
 aws ec2 describe-security-groups --group-ids "$ECS_SG_ID" --query 'SecurityGroups[*].IpPermissions[*].[IpProtocol,FromPort,ToPort,UserIdGroupPairs[*].GroupId]' --output text
