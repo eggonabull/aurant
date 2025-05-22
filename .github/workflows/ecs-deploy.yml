@@ -8,6 +8,7 @@ on:
 
 jobs:
   frontend:
+    if: false
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -100,7 +101,6 @@ jobs:
 
       - name: Prepare Backend task definition
         id: prepare-backend-taskdef-test
-        if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         run: |
           AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
 
