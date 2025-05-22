@@ -230,11 +230,11 @@ sed -e "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" \
     task_definitions/frontend.json.template > task_definitions/frontend-task-definition.json
 
 # Backend task definition
-sed -e "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" \
-    -e "s|\${ECR_REGISTRY}|$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com|g" \
-    -e "s|\${IMAGE_TAG}|$IMAGE_TAG|g" \
-    -e "s|\${AWS_REGION}|$AWS_REGION|g" \
-    task_definitions/backend.json.template > task_definitions/backend-task-definition.json
+AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID" \
+    ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com" \
+    IMAGE_TAG="$IMAGE_TAG" \
+    AWS_REGION="$AWS_REGION" \
+    node task_definitions/backend-task-definition.ts > task_definitions/backend-task-definition.json
 
 # Create Frontend Task Definition
 aws --region $AWS_REGION ecs register-task-definition \
@@ -257,30 +257,39 @@ echo "Cluster name: aurant"
 
 sleep 5
 
-# Create frontend service
-aws --region $AWS_REGION ecs create-service \
-    --cluster aurant \
-    --service-name frontend-service \
-    --enable-execute-command \
-    --task-definition $FRONTEND_TASK_DEFINITION \
-    --desired-count 1 \
-    --launch-type FARGATE \
-    --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$FRONTEND_SG],assignPublicIp=ENABLED}" \
-    --load-balancers "targetGroupArn=${FRONTEND_TG_ARN},containerName=frontend,containerPort=3000" \
-    --health-check-grace-period-seconds 30
+# Get if service already exists
+FRONTEND_SERVICE=$(aws --region $AWS_REGION ecs describe-services --cluster aurant --services frontend-service --query 'services[0].serviceArn' --output text)
+BACKEND_SERVICE=$(aws --region $AWS_REGION ecs describe-services --cluster aurant --services backend-service --query 'services[0].serviceArn' --output text)
 
-sleep 5
+if [ -z "$FRONTEND_SERVICE" ]; then
+    # Create frontend service
+    aws --region $AWS_REGION ecs create-service \
+        --cluster aurant \
+        --service-name frontend-service \
+        --enable-execute-command \
+        --task-definition $FRONTEND_TASK_DEFINITION \
+        --desired-count 1 \
+        --launch-type FARGATE \
+        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$FRONTEND_SG],assignPublicIp=ENABLED}" \
+        --load-balancers "targetGroupArn=${FRONTEND_TG_ARN},containerName=frontend,containerPort=3000" \
+        --health-check-grace-period-seconds 30
 
-# Create backend service
-aws --region $AWS_REGION ecs create-service \
-    --cluster aurant \
-    --service-name backend-service \
-    --task-definition $BACKEND_TASK_DEFINITION \
-    --desired-count 1 \
-    --launch-type FARGATE \
-    --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$BACKEND_SG],assignPublicIp=ENABLED}" \
-    --load-balancers "targetGroupArn=${BACKEND_TG_ARN},containerName=backend,containerPort=8080" \
-    --health-check-grace-period-seconds 30
+    sleep 5
+fi
+
+if [ -z "$BACKEND_SERVICE" ]; then
+    # Create backend service
+    aws --region $AWS_REGION ecs create-service \
+        --cluster aurant \
+        --service-name backend-service \
+        --task-definition $BACKEND_TASK_DEFINITION \
+        --desired-count 1 \
+        --launch-type FARGATE \
+        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$BACKEND_SG],assignPublicIp=ENABLED}" \
+        --load-balancers "targetGroupArn=${BACKEND_TG_ARN},containerName=backend,containerPort=8080" \
+        --health-check-grace-period-seconds 30
+
+fi
 
 # Output important information
 echo "Setup complete!"

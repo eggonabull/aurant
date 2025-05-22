@@ -27,7 +27,7 @@ async fn main() {
     let pool = db::init_db().await.unwrap();
 
     // Run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     tracing::debug!("listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();

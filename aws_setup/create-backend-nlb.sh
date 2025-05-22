@@ -34,6 +34,7 @@ if [ -z "$MAIN_SUBNET" ] || [ "$MAIN_SUBNET" == "None" ]; then
         --output text)
 fi
 
+BACKEND_SG=$(aws --region $AWS_REGION ec2 describe-security-groups --filters "Name=group-name,Values=aurant-backend-sg" --query 'SecurityGroups[0].GroupId' --output text)
 
 # Create target group for backend with IP target type for FARGATE compatibility
 BACKEND_TG_ARN=$(aws --region $AWS_REGION elbv2 create-target-group \
