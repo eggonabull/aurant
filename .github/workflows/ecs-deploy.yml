@@ -100,7 +100,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Prepare Backend task definition
-        id: prepare-backend-taskdef
+        id: prepare-backend-taskdef-test
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         run: |
           AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
@@ -127,7 +127,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
-          task-definition: ${{ steps.prepare-backend-taskdef.outputs.taskdef_file }}
+          task-definition: ${{ steps.prepare-backend-taskdef-test.outputs.taskdef_file }}
           container-name: backend
 
       # Backend deployment
