@@ -100,11 +100,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Prepare Backend task definition
-        id: prepare-backend-taskdef-test
-        run: |
-          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-
-      - name: Prepare Backend task definition
         id: prepare-backend-taskdef
         if: steps.login-ecr.outputs.registry != '' && steps.login-ecr.outputs.registry != 'null'
         run: |
