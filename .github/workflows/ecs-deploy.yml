@@ -113,13 +113,13 @@ jobs:
           task-definition: aws_setup/task_definitions/backend.json.template
           container-name: backend
           environment-variables: |
-            AWS_REGION: ${{ vars.AWS_REGION }}
-            IMAGE_TAG: ${{ github.sha }}
-            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            AWS_REGION=${{ vars.AWS_REGION }}
+            IMAGE_TAG=${{ github.sha }}
+            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
 
           secrets: |
-            AWS_ACCOUNT_ID: ${{ steps.prepare-backend-taskdef-test.outputs.AWS_ACCOUNT_ID }}
-            DATABASE_URL: ${{ secrets.DATABASE_URL }}
+            AWS_ACCOUNT_ID=${{ steps.prepare-backend-taskdef-test.outputs.AWS_ACCOUNT_ID }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
 
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
