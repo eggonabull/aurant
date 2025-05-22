@@ -110,7 +110,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
-          task-definition: aws_setup/task_definitions/backend-task-definition.json
+          task-definition: aws_setup/task_definitions/backend.json.template
           container-name: backend
           environment-variables: |
             AWS_REGION: ${{ vars.AWS_REGION }}
