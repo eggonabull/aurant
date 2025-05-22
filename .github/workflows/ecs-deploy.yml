@@ -112,12 +112,12 @@ jobs:
           image: ${{ steps.login-ecr.outputs.registry }}/aurant-dev-backend:${{ github.sha }}
           task-definition: aws_setup/task_definitions/backend.json.template
           container-name: backend
-          secrets: |
-            AWS_REGION=${{ vars.AWS_REGION }}
-            IMAGE_TAG=${{ github.sha }}
-            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
-            AWS_ACCOUNT_ID=${{ steps.prepare-backend-taskdef-test.outputs.AWS_ACCOUNT_ID }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
+          environment-variables: |
+            AWS_REGION="afwe:fwefweoi"
+            IMAGE_TAG="wfi:/wefje\"wfeowiefj"
+            ECR_REGISTRY="wfeijwef:fweoijf\" wfoef "
+            AWS_ACCOUNT_ID="fwoifjweaafe"
+            DATABASE_URL="weofijweofij"
 
       # Backend deployment
       - name: Build, tag, and push Backend Docker image
