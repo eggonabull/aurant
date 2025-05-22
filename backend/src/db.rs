@@ -126,7 +126,7 @@ pub async fn init_db() -> Result<PgPool> {
         r#"
         CREATE TABLE IF NOT EXISTS orders (
             order_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            table_id UUID REFERENCES tables(id),
+            table_id UUID REFERENCES tables(table_id),
             status TEXT NOT NULL,
             total DECIMAL(10,2) NOT NULL,
             created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -139,8 +139,8 @@ pub async fn init_db() -> Result<PgPool> {
         r#"
         CREATE TABLE IF NOT EXISTS order_items (
             order_item_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            order_id UUID REFERENCES orders(id),
-            menu_item_id UUID REFERENCES menu_items(id),
+            order_id UUID REFERENCES orders(order_id),
+            menu_item_id UUID REFERENCES menu_items(menu_item_id),
             quantity INTEGER NOT NULL,
             price DECIMAL(10,2) NOT NULL,
             created_at TIMESTAMPTZ DEFAULT NOW(),
