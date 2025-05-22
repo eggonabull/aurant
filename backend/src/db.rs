@@ -113,7 +113,7 @@ pub async fn init_db() -> Result<PgPool> {
         r#"
         CREATE TABLE IF NOT EXISTS tables (
             table_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-            restaurant_id UUID REFERENCES restaurants(id),
+            restaurant_id UUID REFERENCES restaurants(restaurant_id),
             number INTEGER NOT NULL,
             capacity INTEGER NOT NULL,
             created_at TIMESTAMPTZ DEFAULT NOW(),
