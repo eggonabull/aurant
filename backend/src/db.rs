@@ -6,16 +6,6 @@ pub async fn init_db() -> Result<PgPool> {
     let database_url = env::var("DATABASE_URL")
         .expect("DATABASE_URL must be set");
 
-    // First, connect to the default postgres database
-    let postgres_pool = PgPool::connect(&database_url).await?;
-
-    // Create our database if it doesn't exist
-    sqlx::query!(
-        r#"
-        CREATE DATABASE jazz_menu;
-        "#
-    ).execute(&postgres_pool).await?;
-
     // Now connect to our new database
     let pool = PgPool::connect(&database_url).await?;
     

@@ -120,6 +120,12 @@ if [ -z "$FRONTEND_SG" ]; then
         --vpc-id $VPC_ID \
         --query 'GroupId' \
         --output text)
+    
+    aws --region $AWS_REGION ec2 authorize-security-group-ingress \
+        --group-id $FRONTEND_SG \
+        --protocol tcp \
+        --port 3000 \
+        --cidr 0.0.0.0/0
 fi
 
 # Check if backend security group already exists
@@ -135,16 +141,9 @@ if [ -z "$BACKEND_SG" ]; then
         --output text)
 fi
 
-# Allow inbound traffic for frontend
-if [ -z "$FRONTEND_SG" ]; then
-    aws --region $AWS_REGION ec2 authorize-security-group-ingress \
-        --group-id $FRONTEND_SG \
-        --protocol tcp \
-        --port 3000 \
-        --cidr 0.0.0.0/0
-fi
-
 # Allow inbound traffic for backend
+# TODO: change this to only allow from the frontend security group
+# (by deleting this whole block)
 if [ -z "$BACKEND_SG" ]; then
     aws --region $AWS_REGION ec2 authorize-security-group-ingress \
         --group-id $BACKEND_SG \
@@ -154,17 +153,19 @@ if [ -z "$BACKEND_SG" ]; then
 fi
 
 # Allow communication between frontend and backend
-if [ -z "$FRONTEND_SG" ] && [ -z "$BACKEND_SG" ]; then
+if [ -z "$FRONTEND_SG" ]; then
     aws --region $AWS_REGION ec2 authorize-security-group-ingress \
         --group-id $FRONTEND_SG \
         --protocol tcp \
-        --port 8080 \
+        --port 3000 \
         --source-group $BACKEND_SG
+fi
 
+if [ -z "$BACKEND_SG" ]; then
     aws --region $AWS_REGION ec2 authorize-security-group-ingress \
         --group-id $BACKEND_SG \
         --protocol tcp \
-        --port 3000 \
+        --port 8080 \
         --source-group $FRONTEND_SG
 fi
 
@@ -266,11 +267,10 @@ if [ -z "$FRONTEND_SERVICE" ]; then
     aws --region $AWS_REGION ecs create-service \
         --cluster aurant \
         --service-name frontend-service \
-        --enable-execute-command \
         --task-definition $FRONTEND_TASK_DEFINITION \
         --desired-count 1 \
         --launch-type FARGATE \
-        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$FRONTEND_SG],assignPublicIp=ENABLED}" \
+        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$FRONTEND_SG]}" \
         --load-balancers "targetGroupArn=${FRONTEND_TG_ARN},containerName=frontend,containerPort=3000" \
         --health-check-grace-period-seconds 30
 
@@ -285,7 +285,7 @@ if [ -z "$BACKEND_SERVICE" ]; then
         --task-definition $BACKEND_TASK_DEFINITION \
         --desired-count 1 \
         --launch-type FARGATE \
-        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$BACKEND_SG],assignPublicIp=ENABLED}" \
+        --network-configuration "awsvpcConfiguration={subnets=[${SUBNET_ID}],securityGroups=[$BACKEND_SG]}" \
         --load-balancers "targetGroupArn=${BACKEND_TG_ARN},containerName=backend,containerPort=8080" \
         --health-check-grace-period-seconds 30
 
