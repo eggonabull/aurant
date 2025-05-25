@@ -57,23 +57,26 @@ if [ -z "$SUBNET1" ] || [ -z "$SUBNET2" ]; then
 fi
 
 
+FRONTEND_TG_ARN=$(aws --region $AWS_REGION elbv2 describe-target-groups --names aurant-frontend-tg --query 'TargetGroups[0].TargetGroupArn' --output text)
 
-# Create target group for frontend with IP target type for FARGATE compatibility
-FRONTEND_TG_ARN=$(aws --region $AWS_REGION elbv2 create-target-group \
-    --name aurant-frontend-tg \
-    --protocol HTTP \
-    --port 3000 \
-    --vpc-id $VPC_ID \
-    --target-type ip \
-    --health-check-protocol HTTP \
-    --health-check-port traffic-port \
-    --health-check-path /health \
-    --health-check-interval-seconds 30 \
-    --health-check-timeout-seconds 5 \
-    --healthy-threshold-count 2 \
-    --unhealthy-threshold-count 2 \
-    --query 'TargetGroups[0].TargetGroupArn' \
-    --output text)
+if [ -z "$FRONTEND_TG_ARN" ]; then
+    # Create target group for frontend with IP target type for FARGATE compatibility
+    FRONTEND_TG_ARN=$(aws --region $AWS_REGION elbv2 create-target-group \
+        --name aurant-frontend-tg \
+        --protocol HTTP \
+        --port 3000 \
+        --vpc-id $VPC_ID \
+        --target-type ip \
+        --health-check-protocol HTTP \
+        --health-check-port traffic-port \
+        --health-check-path /health \
+        --health-check-interval-seconds 30 \
+        --health-check-timeout-seconds 5 \
+        --healthy-threshold-count 2 \
+        --unhealthy-threshold-count 2 \
+        --query 'TargetGroups[0].TargetGroupArn' \
+        --output text)
+fi
 
 if [ $? -ne 0 ]; then
     echo "Error creating target group"

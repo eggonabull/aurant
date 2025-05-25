@@ -1,0 +1,24 @@
+FROM rust:1.87-bullseye
+
+ENV CARGO_TARGET_DIR=/app_target
+RUN mkdir -p $CARGO_TARGET_DIR
+
+# Install PostgreSQL client for SQLx
+RUN apt-get update && apt-get install -y postgresql-client
+
+# Install cargo-watch for hot reloading
+RUN cargo install cargo-watch sqlx-cli --no-default-features --features postgres
+
+WORKDIR /app
+
+# Copy the Cargo.toml and Cargo.lock files
+COPY Cargo.toml Cargo.lock ./
+
+# Copy source code
+COPY . .
+
+# # Create a volume for the source code
+# VOLUME /app
+
+# Start the development server with hot reloading
+CMD cargo watch -x "run"

@@ -1,6 +1,6 @@
 # Aurant.dev
 
-"We'll take care of the rest" - A modern web application built with Next.js and Rust Axum.
+"We'll take care of the rest" - A modern restaurant POS web application built with Next.js and Rust Axum.
 
 ## Project Structure
 

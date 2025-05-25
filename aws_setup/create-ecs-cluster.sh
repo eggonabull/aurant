@@ -224,11 +224,11 @@ IMAGE_TAG=$(git rev-parse HEAD)
 echo "Creating task definition files from templates..."
 
 # Frontend task definition
-sed -e "s|\${AWS_ACCOUNT_ID}|$AWS_ACCOUNT_ID|g" \
-    -e "s|\${ECR_REGISTRY}|$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com|g" \
-    -e "s|\${IMAGE_TAG}|$IMAGE_TAG|g" \
-    -e "s|\${AWS_REGION}|$AWS_REGION|g" \
-    task_definitions/frontend.json.template > task_definitions/frontend-task-definition.json
+AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID" \
+    ECR_REGISTRY="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com" \
+    IMAGE_TAG="$IMAGE_TAG" \
+    AWS_REGION="$AWS_REGION" \
+    node task_definitions/frontend-task-definition.ts > task_definitions/frontend-task-definition.json
 
 # Backend task definition
 AWS_ACCOUNT_ID="$AWS_ACCOUNT_ID" \

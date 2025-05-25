@@ -1,0 +1,49 @@
+# This is a docker compose strictly for development
+# It is not intended to be used for production
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.Dev
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aurant
+      - RUST_LOG=info
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - frontend
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.Dev
+      network: aurantdev_default # Network is required to do the db migrations during build
+      args:
+        - DATABASE_URL=postgresql://postgres:postgres@db:5432/aurant
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aurant
+      - BACKEND_URL=http://backend:8000
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=aurant
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

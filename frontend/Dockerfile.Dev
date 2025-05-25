@@ -1,0 +1,24 @@
+FROM node:24-alpine
+
+ARG DATABASE_URL
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy Prisma schema and generate Prisma client
+COPY prisma ./prisma
+RUN npm run db:deploy
+
+# Copy the rest of the application
+COPY . .
+
+# Create volume for source code
+VOLUME /app
+
+# Start the development server
+CMD ["npm", "run", "dev"]
